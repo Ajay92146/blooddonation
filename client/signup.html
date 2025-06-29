@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup</title>
+</head>
+<body>
+  <h2>Signup</h2>
+  <form id="signupForm">
+    <input type="text" name="name" placeholder="Name" required><br>
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+
+    <select name="role" required>
+      <option value="donor">Donor</option>
+      <option value="receiver">Receiver</option>
+    </select><br>
+
+    <select name="bloodGroup" required>
+      <option value="A+">A+</option>
+      <option value="O+">O+</option>
+      <!-- Add more blood types as needed -->
+    </select><br>
+
+    <input type="text" name="city" placeholder="City" required><br>
+    <button type="submit">Signup</button>
+  </form>
+
+<a href="/client/login.html" target="_blank">
+    <button>login</button>
+</a>
+
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        email: form.email.value,
+        password: form.password.value,
+        role: form.role.value,
+        bloodGroup: form.bloodGroup.value,
+        location: {
+          city: form.city.value,
+          lat: 0,
+          lng: 0
+        }
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          data.location.lat = position.coords.latitude;
+          data.location.lng = position.coords.longitude;
+          submitData(data);
+        }, function () {
+          submitData(data); // If denied or error, proceed with default lat/lng
+        });
+      } else {
+        submitData(data); // Fallback if geolocation not supported
+      }
+    });
+
+    async function submitData(data) {
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        alert(result.msg || 'Signup successful!');
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

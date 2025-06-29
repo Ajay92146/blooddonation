@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receiver Dashboard</title>
+</head>
+<body>
+  <h2>Welcome Receiver!</h2>
+  <p id="info"></p>
+
+  <h3>Find a Donor</h3>
+  <form id="searchForm">
+    <select name="bloodGroup" required>
+      <option value="A+">A+</option>
+      <option value="O+">O+</option>
+      <!-- Add more blood groups if needed -->
+    </select><br>
+    <input type="text" name="city" placeholder="Enter city" required><br>
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="results"></div><br>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    // Check if user is logged in and is a receiver
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'receiver') {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('info').innerText =
+        `Name: ${user.name}, Blood Group Needed: ${user.bloodGroup}, City: ${user.location.city}`;
+    }
+
+    // Handle donor search
+    document.getElementById('searchForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const bloodGroup = form.bloodGroup.value;
+      const city = form.city.value;
+
+      try {
+        const res = await fetch(`/api/auth/receiver/search?bloodGroup=${bloodGroup}&city=${city}`);
+        const donors = await res.json();
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '<h4>Matching Donors:</h4>';
+
+        if (donors.length === 0) {
+          resultsDiv.innerHTML += '<p>No donors found.</p>';
+        } else {
+          donors.forEach(donor => {
+            resultsDiv.innerHTML += `
+              <div>
+                <strong>${donor.name}</strong><br>
+                Blood Group: ${donor.bloodGroup}<br>
+                City: ${donor.location.city}<br>
+                Contact Email: ${donor.email}
+              </div><br>`;
+          });
+        }
+      } catch (err) {
+        alert('Error fetching donors: ' + err.message);
+      }
+    });
+
+    // Logout
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

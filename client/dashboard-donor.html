@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Donor Dashboard</title>
+</head>
+<body>
+  <h2>Welcome Donor!</h2>
+  <p id="info"></p>
+
+  <label>
+    Available for Donation:
+    <input type="checkbox" id="availabilitySwitch">
+  </label>
+  <br><br>
+
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    // Ensure only logged-in donors access this page
+    if (!user || user.role !== 'donor') {
+      window.location.href = 'login.html';
+    } else {
+      // Display donor info
+      document.getElementById('info').innerText =
+        `Name: ${user.name}, Blood Group: ${user.bloodGroup}, City: ${user.location.city}`;
+
+      const switchBtn = document.getElementById('availabilitySwitch');
+      switchBtn.checked = user.availability;
+
+      // Update availability status when toggled
+      switchBtn.addEventListener('change', async () => {
+        try {
+          const res = await fetch(`/api/auth/donor/availability/${user._id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ availability: switchBtn.checked })
+          });
+
+          const updatedUser = await res.json();
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          alert(`Availability changed to ${updatedUser.availability ? 'Available' : 'Not Available'}`);
+        } catch (err) {
+          alert('Error updating availability: ' + err.message);
+        }
+      });
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
